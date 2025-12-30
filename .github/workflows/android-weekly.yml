@@ -31,17 +31,23 @@ jobs:
           env: ${{ secrets.ENV_FILE }}
           sentry: ${{ secrets.SENTRY_PROPERTIES }}
 
-      - name: python fixHTTP
+      - name: python fixHTTP & version bump
         run: |
           python ./scripts/dev_cleartext.py
           python ./scripts/release_bump.py --dev
 
-      - name: Build Android
+      # ✅ 新增核心步骤：临时禁用签名校验（关键！避免gradle签名配置冲突）
+      - name: Disable APK Sign (关闭签名，无签名打包核心)
+        run: echo "android.buildTypes.release.signingConfig=null" >> ./android/gradle.properties
+        shell: /usr/bin/bash
+
+      # ✅ 核心修改：移除所有签名参数，纯净无签名打包
+      - name: Build Android (无签名Release包)
         uses: ./.github/composite-actions/build-apk
         with:
-          signpwd: ${{ secrets.RELEASE_SIGN_PWD }}
-          signkey: ${{ secrets.SIGNED_KEY_BASE64 }}
+          buildtype: assembleRelease  # 明确指定无签名Release打包命令
 
+      # ✅ 原样保留：打包产物自动上传到GitHub Release，路径不变
       - name: Release
         uses: softprops/action-gh-release@v2
         with:

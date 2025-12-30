@@ -35,19 +35,20 @@ jobs:
         run: |
           python ./scripts/dev_cleartext.py
           python ./scripts/release_bump.py --dev
+        shell: bash # ✅ 统一合规Shell配置
 
-      # ✅ 新增核心步骤：临时禁用签名校验（关键！避免gradle签名配置冲突）
-      - name: Disable APK Sign (关闭签名，无签名打包核心)
+      # ✅ 核心修复1：Shell语法合规 + 禁用签名校验（无签名打包关键）
+      - name: Disable APK Sign (关闭签名，核心步骤)
         run: echo "android.buildTypes.release.signingConfig=null" >> ./android/gradle.properties
-        shell: /usr/bin/bash
+        shell: bash # ✅ 用内置别名，彻底解决Shell报错
 
-      # ✅ 核心修改：移除所有签名参数，纯净无签名打包
+      # ✅ 核心修复2：移除签名参数，纯净无签名打包
       - name: Build Android (无签名Release包)
         uses: ./.github/composite-actions/build-apk
         with:
-          buildtype: assembleRelease  # 明确指定无签名Release打包命令
+          buildtype: assembleRelease
 
-      # ✅ 原样保留：打包产物自动上传到GitHub Release，路径不变
+      # ✅ 原样保留：产物自动上传GitHub Release
       - name: Release
         uses: softprops/action-gh-release@v2
         with:

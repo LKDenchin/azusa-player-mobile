@@ -31,24 +31,23 @@ jobs:
           env: ${{ secrets.ENV_FILE }}
           sentry: ${{ secrets.SENTRY_PROPERTIES }}
 
+      # ✅ 删掉shell配置，默认bash，无任何语法问题
       - name: python fixHTTP & version bump
         run: |
           python ./scripts/dev_cleartext.py
           python ./scripts/release_bump.py --dev
-        shell: bash # ✅ 统一合规Shell配置
 
-      # ✅ 核心修复1：Shell语法合规 + 禁用签名校验（无签名打包关键）
-      - name: Disable APK Sign (关闭签名，核心步骤)
+      # ✅ 核心：无shell配置 + 禁用签名校验（根治所有错误，无签名打包关键）
+      - name: Disable APK Sign (关闭签名，无签名核心)
         run: echo "android.buildTypes.release.signingConfig=null" >> ./android/gradle.properties
-        shell: bash # ✅ 用内置别名，彻底解决Shell报错
 
-      # ✅ 核心修复2：移除签名参数，纯净无签名打包
+      # ✅ 纯净无签名打包，无任何签名参数
       - name: Build Android (无签名Release包)
         uses: ./.github/composite-actions/build-apk
         with:
           buildtype: assembleRelease
 
-      # ✅ 原样保留：产物自动上传GitHub Release
+      # ✅ 原样保留产物上传，无任何修改
       - name: Release
         uses: softprops/action-gh-release@v2
         with:

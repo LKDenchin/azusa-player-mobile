@@ -1,13 +1,9 @@
 name: Android Build
-description: build for android APK
+description: build for android APK (无签名纯净版，已移除所有签名逻辑)
 
 inputs:
-  signpwd:
-    description: "release sign pwd in gradle.properties"
-    required: true
-  signkey:
-    description: "signed key in base64"
-    required: true
+  # ✅ 核心修改1：彻底删除 签名密码signpwd、签名密钥signkey 两个必填参数
+  # ✅ 仅保留打包类型参数，无任何签名依赖
   buildtype:
     description: "build type (APK/AAB)"
     default: "assembleRelease"
@@ -19,27 +15,18 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Add Build Sign Keys
-      env:
-        RELEASE_SIGN_PWD: ${{ inputs.signpwd }}
-      run: |
-        echo "$RELEASE_SIGN_PWD" >> ./android/gradle.properties
-      shell: bash
+    # ✅ 核心修改2：彻底删除「写入签名密码」「生成jks签名文件」2个报错步骤
+    # ❌ 已移除：Add Build Sign Keys（echo $RELEASE_SIGN_PWD）
+    # ❌ 已移除：Build Sign jks（timheuer/base64-to-file 报错根源）
 
-    - name: Build Sign jks
-      id: write_file
-      uses: timheuer/base64-to-file@v1.2
-      with:
-        fileName: 'noxupload.jks'
-        fileDir: './android/app'
-        encodedString: ${{ inputs.signkey }}
-        
+    # ✅ 保留：清理打包缓存，避免编译冲突（原有功能不变）
     - name: clean generated builds
       run: rm -rf android/app/build/generated/
       shell: bash
 
-    - name: gradle build
+    # ✅ 核心修改3：纯净打包命令 + 强制禁用签名（双重保险）
+    - name: gradle build (无签名打包)
       env: 
         BUILD: ${{ inputs.buildtype }}
-      run: cd android && chmod +x gradlew && ./gradlew "$BUILD"
+      run: cd android && chmod +x gradlew && ./gradlew "$BUILD" -Pandroid.buildTypes.release.signingConfig=null
       shell: bash

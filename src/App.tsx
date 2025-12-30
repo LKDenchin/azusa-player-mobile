@@ -49,22 +49,14 @@ if (TRACKING) {
 }
 
 const useSplash = (duration = 1000) => {
-  const [isReady, setIsReady] = React.useState(false);
-  useEffect(() => {
-    // wait for 1000 ms and set isReady to true
-    setTimeout(() => {
-      setIsReady(true);
-    }, duration);
-  });
-  return isReady;
+  // Removed splash screen logic - always return true to skip splash
+  return true;
 };
 
 export default function App(appProps: NoxComponent.AppProps) {
   const { vip } = useSetupVIP();
-  const isSplashReady = useSplash(
-    __DEV__ || appProps.intentData || vip ? 1 : 2500,
-  );
-  const [isSplashAnimReady, setIsSplashAnimReady] = React.useState(vip);
+  const isSplashReady = useSplash(0);
+  const [isSplashAnimReady, setIsSplashAnimReady] = React.useState(true);
   const isPlayerReady = useSetupPlayer({ ...appProps, vip });
   const isLandscape = useIsLandscape();
   const PIPMode = useStore(appStore, state => state.pipMode);
@@ -93,15 +85,16 @@ export default function App(appProps: NoxComponent.AppProps) {
     };
   }, []);
 
-  if (!(isPlayerReady && isSplashReady && isSplashAnimReady)) {
-    return (
-      <SafeAreaProvider>
-        <View style={styles.screenContainer}>
-          <AppOpenSplash setIsSplashReady={setIsSplashAnimReady} />
-        </View>
-      </SafeAreaProvider>
-    );
-  }
+  // Removed splash screen logic - skip directly to main app
+  // if (!(isPlayerReady && isSplashReady && isSplashAnimReady)) {
+  //   return (
+  //     <SafeAreaProvider>
+  //       <View style={styles.screenContainer}>
+  //         <AppOpenSplash setIsSplashReady={setIsSplashAnimReady} />
+  //       </View>
+  //     </SafeAreaProvider>
+  //   );
+  // }
   return (
     <GestureHandlerRootView style={styles.gestureContainer}>
       <HookEmptyComponent />
